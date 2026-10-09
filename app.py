@@ -7,26 +7,25 @@ import io
 # Configuración de la página web de Streamlit
 st.set_page_config(
     page_title="Despliegue - Predicción de Sentimientos de Reviews",
-    page_icon="📊",
+    page_icon="🧠",
     layout="wide"
 )
 
 # --- ENCABEZADO ACADÉMICO REQUERIDO ---
 st.markdown("""
-<div style="background-color:#1e293b; padding:20px; border-radius:10px; margin-bottom:25px; border-left: 8px solid #3b82f6;">
-    <h4 style="color:#f8fafc; margin:0;">🏫 Especialización en Analítica de Datos Aplicada a los Negocios</h4>
-    <p style="color:#94a3b8; font-size:16px; margin:5px 0 0 0;">
+<div style="background-color:#0f172a; padding:20px; border-radius:12px; margin-bottom:25px; border-left: 8px solid #6366f1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+    <h4 style="color:#f8fafc; margin:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 600;">🏫 Especialización en Analítica de Datos Aplicada a los Negocios</h4>
+    <p style="color:#94a3b8; font-size:15px; margin:8px 0 0 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
         <strong>Asignatura:</strong> Machine Learning <br>
         <strong>Autores:</strong> Daniela Sanchez Narvaez y Valeria Cely Martinez
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-# Título y Descripción de la Aplicación
-st.title("🧠 Clasificador de Sentimiento de Reviews (SVM)")
+# Título y Descripción de la Aplicación con estilos minimalistas y modernos
+st.title("📊 Clasificador de Sentimiento de Reviews (SVM)")
 st.markdown("""
-Esta aplicación web recopila **todas las variables originales del conjunto de datos** para su procesamiento.
-Posteriormente, realiza una **limpieza y transformación de datos (ETL)** en tiempo real, aislando únicamente las variables predictivas óptimas para el pipeline del modelo.
+Esta plataforma analítica recopila las dimensiones del conjunto de datos original, ejecuta un procesamiento ETL estructurado en tiempo real y predice la polaridad del sentimiento mediante un clasificador de vectores de soporte (SVM).
 """)
 
 # --- DEFINICIÓN DE CONFIGURACIÓN POR DEFECTO Y CARGA DE MODELO ---
@@ -47,6 +46,11 @@ ALL_INITIAL_COLUMNS = [
     'negative_word_score', 'neutral_word_score', 'rating', 'product_category',
     'verified_purchase', 'helpful_votes', 'review_year', 'Platform'
 ]
+
+# Listas de opciones reales extraídas del análisis del dataset para los selectbox solicitados
+LISTA_COLORES = ["Pink", "Purple", "Blue", "Gray", "Green", "Red", "Orange", "Yellow", "Black", "White"]
+LISTA_HOBBIES = ["Reading", "Sports", "Music", "Gardening", "Gaming", "Cooking", "Traveling", "Photography", "Art", "Movies"]
+LISTA_CATEGORIAS = [f"Cat{i}" for i in range(40)] + ["Tools", "Sports", "Fashion", "Books", "Automotive", "Beauty", "Toys", "Garden", "Pet", "Home", "Music", "Electronics", "Grocery", "Baby", "Office"]
 
 @st.cache_resource
 def cargar_artefactos():
@@ -87,7 +91,7 @@ def limpiar_y_predecir(df_input):
 
         resultados = [MAP_SENTIMENT[p] for p in preds]
         confianzas = [f"{p*100:.1f}%" for p in prob_max]
-    else:
+    else: 
         # Lógica de simulación condicional basada en scores
         resultados = []
         confianzas = []
@@ -111,40 +115,50 @@ def limpiar_y_predecir(df_input):
     return df_clean
 
 # --- INTERFAZ 1: PREDICCIÓN INDIVIDUAL REQUIRIENDO TODOS LOS CAMPOS ---
-st.sidebar.header("📝 Formulario de Entrada Completa")
-st.sidebar.write("Para realizar una predicción, debes rellenar obligatoriamente todos los campos recolectados originalmente:")
+st.sidebar.header("📝 Formulario de Entrada")
+st.sidebar.write("Introduce los datos para simular un registro individual con la estructura original:")
 
 with st.sidebar.form("full_individual_form"):
-    st.subheader("Información Personal (Metadata)")
-    val_id = st.text_input("ID del Registro (RecordID)", value="REC99999")
-    val_name = st.text_input("Nombre Completo (FullName)", value="Juan Pérez")
+    st.subheader("📌 Información Personal")
+    # placeholders transparentes para evitar que el usuario tenga que borrar el texto de ejemplo
+    val_id = st.text_input("ID del Registro (RecordID)", placeholder="ej. REC99999")
+    val_name = st.text_input("Nombre Completo (FullName)", placeholder="ej. Juan Pérez")
     val_phone = st.number_input("Número de Teléfono (Phone)", min_value=3000000000, max_value=3999999999, value=3154859632)
     val_zodiac = st.selectbox("Signo Zodiacal", ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"])
-    val_color = st.text_input("Color Favorito", value="Azul")
-    val_hobby = st.text_input("Hobby principal", value="Leer")
+    
+    # Ajuste solicitado: Listas desplegables para Color Favorito y Hobby Principal
+    val_color = st.selectbox("Color Favorito", LISTA_COLORES)
+    val_hobby = st.selectbox("Hobby Principal", LISTA_HOBBIES)
 
-    st.subheader("Detalles de la Review")
+    st.subheader("💬 Detalles de la Review")
     val_len = st.number_input("Longitud del Review (review_length)", min_value=0, max_value=50000, value=150)
     val_questions = st.number_input("Cantidad de Signos de Interrogación (question_count)", min_value=0, max_value=10, value=0)
     val_rating = st.slider("Calificación (rating)", min_value=1, max_value=5, value=3)
-    val_cat = st.text_input("Categoría de Producto", value="Electronics")
+    
+    # Ajuste solicitado: Lista desplegable para Categoría de Producto
+    val_cat = st.selectbox("Categoría de Producto", LISTA_CATEGORIAS)
+    
     val_verified = st.selectbox("Compra Verificada", ["Yes", "No"])
     val_votes = st.number_input("Votos Útiles (helpful_votes)", min_value=-5, max_value=10000, value=0)
-    val_year = st.number_input("Año del Review (review_year)", min_value=2018, max_value=2024, value=2023)
+    val_year = st.number_input("Año del Review (review_year)", min_value=2018, max_value=2026, value=2023)
     val_platform = st.selectbox("Plataforma de Compra", ["Web", "App", "Partner"])
 
-    st.subheader("Variables del Modelo (Métricas NLP)")
+    st.subheader("⚙️ Variables del Modelo")
     val_exclamations = st.slider("Cantidad de Exclamaciones (exclamation_count)", min_value=0, max_value=20, value=2)
     val_pos_score = st.slider("Score Positivo (positive_word_score)", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
     val_neg_score = st.slider("Score Negativo (negative_word_score)", min_value=0.0, max_value=1.0, value=0.3, step=0.01)
     val_neu_score = st.slider("Score Neutro (neutral_word_score)", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
 
-    submit_btn = st.form_submit_button("Procesar ETL e Iniciar Predicción")
+    submit_btn = st.form_submit_button("Iniciar Predicción")
 
 if submit_btn:
-    # Estructuramos el dataframe simulando exactamente la recepción del dataset crudo
+    # Validación y asignación de valores de respaldo si el placeholder se dejó vacío
+    id_final = val_id if val_id else "REC99999"
+    name_final = val_name if val_name else "Juan Pérez"
+
+    # Estructuramos el dataframe simulando la estructura cruda completa
     data_individual = pd.DataFrame([{
-        'RecordID': val_id, 'FullName': val_name, 'Phone': val_phone, 'ZodiacSign': val_zodiac,
+        'RecordID': id_final, 'FullName': name_final, 'Phone': val_phone, 'ZodiacSign': val_zodiac,
         'FavoriteColor': val_color, 'Hobby': val_hobby, 'review_length': val_len,
         'exclamation_count': val_exclamations, 'question_count': val_questions,
         'positive_word_score': val_pos_score, 'negative_word_score': val_neg_score,
@@ -197,7 +211,7 @@ if archivo_subido is not None:
             st.dataframe(df_cargado.head(10))
 
         # Procesamiento ETL y Predicción
-        with st.spinner("🤖 Ejecutando limpieza ETL y calculando sentimientos con SVM..."):
+        with st.spinner("🤖 Calculando sentimientos con SVM..."):
             df_predicho = limpiar_y_predecir(df_cargado)
 
         st.subheader("🎯 Resultados de las Predicciones")
