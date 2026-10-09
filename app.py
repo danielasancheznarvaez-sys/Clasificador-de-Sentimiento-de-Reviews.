@@ -20,12 +20,12 @@ st.markdown("""
         <strong>Autores:</strong> Daniela Sanchez Narvaez y Valeria Cely Martinez
     </p>
 </div>
-""", unsafe_html=True)
+""", unsafe_allow_html=True)
 
 # Título y Descripción de la Aplicación
 st.title("🧠 Clasificador de Sentimiento de Reviews (SVM)")
 st.markdown("""
-Esta aplicación web recopila **todas las variables originales del conjunto de datos** para su procesamiento. 
+Esta aplicación web recopila **todas las variables originales del conjunto de datos** para su procesamiento.
 Posteriormente, realiza una **limpieza y transformación de datos (ETL)** en tiempo real, aislando únicamente las variables predictivas óptimas para el pipeline del modelo.
 """)
 
@@ -65,7 +65,7 @@ if model_pipeline is None:
 def limpiar_y_predecir(df_input):
     """ETL Pipeline: Recibe un DF con todas las variables, limpia y predice usando el modelo SVM."""
     df_clean = df_input.copy()
-    
+
     # PROCESAMIENTO Y LIMPIEZA ETL EN TIEMPO REAL
     # Convertir a numérico y rellenar nulos para las variables predictivas específicas
     for col in FEATURES_PREDICTIVAS:
@@ -73,9 +73,9 @@ def limpiar_y_predecir(df_input):
             df_clean[col] = MEANS_ENTRENAMIENTO[col]
         else:
             df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce').fillna(MEANS_ENTRENAMIENTO[col])
-            
+
     X_features = df_clean[FEATURES_PREDICTIVAS]
-    
+
     # Predicción utilizando el modelo cargado o la función simuladora robusta
     if model_pipeline is not None:
         preds = model_pipeline.predict(X_features)
@@ -84,7 +84,7 @@ def limpiar_y_predecir(df_input):
             prob_max = np.max(probs, axis=1)
         except:
             prob_max = [1.0] * len(preds)
-        
+
         resultados = [MAP_SENTIMENT[p] for p in preds]
         confianzas = [f"{p*100:.1f}%" for p in prob_max]
     else:
@@ -95,7 +95,7 @@ def limpiar_y_predecir(df_input):
             pos = row['positive_word_score']
             neg = row['negative_word_score']
             neu = row['neutral_word_score']
-            
+
             if neg > pos and neg > neu:
                 resultados.append('negative')
                 confianzas.append(f"{max(70.0, neg*100):.1f}%")
@@ -105,7 +105,7 @@ def limpiar_y_predecir(df_input):
             else:
                 resultados.append('neutral')
                 confianzas.append(f"{max(70.0, neu*100):.1f}%")
-                
+
     df_clean['sentimiento_predicho'] = resultados
     df_clean['confianza_prediccion'] = confianzas
     return df_clean
@@ -122,7 +122,7 @@ with st.sidebar.form("full_individual_form"):
     val_zodiac = st.selectbox("Signo Zodiacal", ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"])
     val_color = st.text_input("Color Favorito", value="Azul")
     val_hobby = st.text_input("Hobby principal", value="Leer")
-    
+
     st.subheader("Detalles de la Review")
     val_len = st.number_input("Longitud del Review (review_length)", min_value=0, max_value=50000, value=150)
     val_questions = st.number_input("Cantidad de Signos de Interrogación (question_count)", min_value=0, max_value=10, value=0)
@@ -132,13 +132,13 @@ with st.sidebar.form("full_individual_form"):
     val_votes = st.number_input("Votos Útiles (helpful_votes)", min_value=-5, max_value=10000, value=0)
     val_year = st.number_input("Año del Review (review_year)", min_value=2018, max_value=2024, value=2023)
     val_platform = st.selectbox("Plataforma de Compra", ["Web", "App", "Partner"])
-    
+
     st.subheader("Variables del Modelo (Métricas NLP)")
     val_exclamations = st.slider("Cantidad de Exclamaciones (exclamation_count)", min_value=0, max_value=20, value=2)
     val_pos_score = st.slider("Score Positivo (positive_word_score)", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
     val_neg_score = st.slider("Score Negativo (negative_word_score)", min_value=0.0, max_value=1.0, value=0.3, step=0.01)
     val_neu_score = st.slider("Score Neutro (neutral_word_score)", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
-    
+
     submit_btn = st.form_submit_button("Procesar ETL e Iniciar Predicción")
 
 if submit_btn:
@@ -152,12 +152,12 @@ if submit_btn:
         'verified_purchase': val_verified, 'helpful_votes': val_votes, 'review_year': val_year,
         'Platform': val_platform
     }])
-    
+
     # Aplicamos ETL y predicción
     res_df = limpiar_y_predecir(data_individual)
     pred_sent = res_df.loc[0, 'sentimiento_predicho']
     pred_conf = res_df.loc[0, 'confianza_prediccion']
-    
+
     st.sidebar.markdown("--- ")
     st.sidebar.subheader("Resultado del Análisis:")
     if pred_sent == 'positive':
@@ -174,34 +174,34 @@ st.write("Sube un archivo en formato **CSV o Excel** que contenga todos los camp
 archivo_subido = st.file_uploader("Selecciona el archivo (.csv, .xlsx, .xls)", type=["csv", "xlsx", "xls"])
 
 if archivo_subido is not None:
-    try: 
+    try:
         # Lectura dinámica
         nombre_archivo = archivo_subido.name
         if nombre_archivo.endswith('.csv'):
             df_cargado = pd.read_csv(archivo_subido)
         else:
             df_cargado = pd.read_excel(archivo_subido)
-            
+
         # Verificación de que estén presentes las variables esperadas
         columnas_faltantes = [col for col in ALL_INITIAL_COLUMNS if col not in df_cargado.columns]
-        
+
         if columnas_faltantes:
             st.warning(f"⚠️ Tu archivo no contiene todas las columnas requeridas del dataset inicial. Faltan: {columnas_faltantes}. El sistema intentará imputarlas con valores por defecto para evitar errores.")
             for col in columnas_faltantes:
                 df_cargado[col] = np.nan
-                
+
         st.success(f"✅ Archivo '{nombre_archivo}' cargado con éxito. Se detectaron **{len(df_cargado)} registros**.")
-        
+
         # Mostrar vista previa original
         with st.expander("👁️ Ver primeros registros originales cargados"):
             st.dataframe(df_cargado.head(10))
-            
+
         # Procesamiento ETL y Predicción
         with st.spinner("🤖 Ejecutando limpieza ETL y calculando sentimientos con SVM..."):
             df_predicho = limpiar_y_predecir(df_cargado)
-            
+
         st.subheader("🎯 Resultados de las Predicciones")
-        
+
         # Distribución de Clases
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -212,25 +212,25 @@ if archivo_subido is not None:
             cols_result = ['sentimiento_predicho', 'confianza_prediccion'] + [c for c in df_predicho.columns if c not in ['sentimiento_predicho', 'confianza_prediccion']]
             st.markdown("**Tabla de resultados con predicciones:**")
             st.dataframe(df_predicho[cols_result].head(100))
-            
+
         # Descarga de resultados procesados
         st.markdown("### 📥 Descargar Resultados")
         st.write("Descarga la base de datos completa con las predicciones y niveles de confianza adjuntados localmente.")
-        
+
         col_btn1, col_btn2 = st.columns(2)
-        
+
         # Descarga Excel
         buffer_excel = io.BytesIO()
         with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
             df_predicho.to_excel(writer, index=False, sheet_name='Predicciones')
-        
+
         col_btn1.download_button(
             label="📥 Descargar en Excel (.xlsx)",
             data=buffer_excel.getvalue(),
             file_name="predicciones_sentimiento.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        
+
         # Descarga CSV
         csv_data = df_predicho.to_csv(index=False).encode('utf-8')
         col_btn2.download_button(
@@ -239,7 +239,7 @@ if archivo_subido is not None:
             file_name="predicciones_sentimiento.csv",
             mime="text/csv"
         )
-        
+
     except Exception as e:
         st.error(f"❌ Ocurrió un error al procesar el archivo: {e}")
 else:
