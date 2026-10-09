@@ -1,0 +1,16 @@
+{
+  "features": [
+    "exclamation_count",
+    "positive_word_score",
+    "negative_word_score",
+    "neutral_word_score"
+  ],
+  "clases": {
+    "0": "negative",
+    "1": "neutral",
+    "2": "positive"
+  },
+  "modelo": "SVM con StandardScaler",
+  "f1_macro_test": 0.8182,
+  "accuracy_test": 0.8458
+}
